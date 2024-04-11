@@ -7,4 +7,5 @@ export interface SignUpPayload extends Omit<Users, "password"> {
 export interface SignInPayload {
    email: string;
    password: string;
+   client: string;
 }

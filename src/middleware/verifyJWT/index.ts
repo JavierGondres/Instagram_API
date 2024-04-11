@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import { Collection } from "mongodb";
 import { UserSessions } from "../../types/identidades.js";
 import { DecodedToken } from "./types.js";
+import { CustomResponse } from "../../utils/Reponse/response.js";
 
 export class ValidateToken {
    private userSessionsCollection: Collection<UserSessions>;
@@ -24,16 +25,15 @@ export class ValidateToken {
 
       try {
          const decoded = await this.verifyToken(token);
-         console.log({ token });
-         console.log({ decoded });
          const userSession = await this.userSessionsCollection.findOne({
             _id: decoded.sessionId,
          });
 
          if (!userSession) {
             console.warn("Session does not exist");
-            return res.status(403).json({ error: "Session does not exist" });
-         }
+            return CustomResponse.response(404, "Session doesnt exist", res);
+         } else if (userSession && userSession.isValid == false)
+            return CustomResponse.response(403, "Invalid token", res);
 
          req.decodedUserRole = decoded.role;
          req.decodedUserId = decoded.userId;

@@ -72,6 +72,8 @@ export class AuthModel {
                     userId: existingUser._id,
                     token: userAccessToken,
                     createdAt: new Date(),
+                    client: payload.client,
+                    isValid: true,
                 };
                 yield this.userSessionsCollection.insertOne(userSession);
                 console.info(`User ${existingUser.email} logged in`);
@@ -86,9 +88,8 @@ export class AuthModel {
     signOut(sessionId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.userSessionsCollection.deleteOne({
-                    _id: sessionId,
-                });
+                // Invalidar la sesión marcando isValid como false
+                yield this.userSessionsCollection.updateOne({ _id: sessionId }, { $set: { isValid: false } });
                 console.info(`Session ${sessionId} signed out`);
                 return CustomResponse.success("Sign out successful");
             }

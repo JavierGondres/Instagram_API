@@ -78,6 +78,8 @@ export class AuthModel {
             userId: existingUser._id,
             token: userAccessToken,
             createdAt: new Date(),
+            client: payload.client,
+            isValid: true,
          };
 
          await this.userSessionsCollection.insertOne(userSession);
@@ -91,9 +93,12 @@ export class AuthModel {
 
    async signOut(sessionId: string) {
       try {
-         await this.userSessionsCollection.deleteOne({
-            _id: sessionId,
-         });
+         // Invalidar la sesión marcando isValid como false
+         await this.userSessionsCollection.updateOne(
+            { _id: sessionId },
+            { $set: { isValid: false } }
+         );
+
          console.info(`Session ${sessionId} signed out`);
          return CustomResponse.success("Sign out successful");
       } catch (error) {

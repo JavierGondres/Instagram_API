@@ -13,4 +13,6 @@ export interface UserSessions {
    userId: string;
    token: string;
    createdAt: Date;
+   client: string;
+   isValid: boolean;
 }

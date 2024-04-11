@@ -13,8 +13,9 @@ export class AuthController {
     constructor(authModel) {
         this.signIn = (req, res) => __awaiter(this, void 0, void 0, function* () {
             const { email, password } = req.body;
+            const client = req.headers["user-agent"];
             try {
-                const result = yield this.authModel.signIn({ email, password });
+                const result = yield this.authModel.signIn({ email, password, client: client !== null && client !== void 0 ? client : "No client" });
                 return res.status(result.status).json(result);
             }
             catch (e) {
