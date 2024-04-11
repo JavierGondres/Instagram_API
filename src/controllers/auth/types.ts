@@ -14,9 +14,3 @@ export interface SignUpPayload {
    profilePicture: string | null;
    role?: Roles;
 }
-
-export interface AuthResponse {
-   error: boolean;
-   message: string;
-   [key: string]: any;
-}

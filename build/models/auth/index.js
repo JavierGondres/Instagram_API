@@ -20,8 +20,8 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
-import { CustomError } from "../../utils/CustomErrors/index.js";
 import { generateJWT } from "../../middleware/generateJWT/index.js";
+import { CustomResponse } from "../../utils/Reponse/response.js";
 export class AuthModel {
     constructor(userCollection, userSessionsCollection) {
         this.userCollection = userCollection;
@@ -33,17 +33,17 @@ export class AuthModel {
             const passwordHash = yield bcrypt.hash(password, 8);
             const existingUser = yield this.findUser({ email: payload.email });
             if (existingUser) {
-                throw new CustomError("User with this email already exists", 400);
+                return CustomResponse.error(400, "User with this email already exists");
             }
             const newUser = Object.assign(Object.assign({}, rest), { password: passwordHash, role: rest.role || "User", _id });
             try {
                 yield this.userCollection.insertOne(newUser);
                 console.info("User created:", newUser.email);
-                return { error: false, message: "User created successfully" };
+                return CustomResponse.success("User created succesfully");
             }
             catch (error) {
                 console.error("Error creating user:", error);
-                throw new CustomError("Something went wrong", 500);
+                return CustomResponse.error(500, "Something went wrong");
             }
         });
     }
@@ -51,11 +51,11 @@ export class AuthModel {
         return __awaiter(this, void 0, void 0, function* () {
             const existingUser = yield this.findUser({ email: payload.email });
             if (!existingUser) {
-                throw new CustomError("User not found", 404);
+                return CustomResponse.error(404, "User not found");
             }
             const isValidPassword = yield bcrypt.compare(payload.password.toString(), existingUser.password.toString());
             if (!isValidPassword) {
-                throw new CustomError("Invalid credentials", 401);
+                return CustomResponse.error(401, "Invalid credentials");
             }
             const sessionId = uuidv4();
             const { userAccessToken } = yield generateJWT({
@@ -64,7 +64,7 @@ export class AuthModel {
                 sessionId,
             });
             if (!userAccessToken) {
-                throw new CustomError("Failed to generate access token", 500);
+                return CustomResponse.error(500, "failed to generate accesToken");
             }
             try {
                 const userSession = {
@@ -75,15 +75,11 @@ export class AuthModel {
                 };
                 yield this.userSessionsCollection.insertOne(userSession);
                 console.info(`User ${existingUser.email} logged in`);
-                return {
-                    error: false,
-                    message: "Login successful",
-                    token: userAccessToken,
-                };
+                return CustomResponse.success("Login succesfull", userAccessToken);
             }
             catch (error) {
                 console.error("Error creating user session:", error);
-                throw new CustomError("Something went wrong", 500);
+                return CustomResponse.error(500, "Something went wrong");
             }
         });
     }
@@ -94,11 +90,11 @@ export class AuthModel {
                     _id: sessionId,
                 });
                 console.info(`Session ${sessionId} signed out`);
-                return { error: false, message: "Sign out successful" };
+                return CustomResponse.success("Sign out successful");
             }
             catch (error) {
                 console.error("Error during sign out:", error);
-                throw new CustomError("Sign out failed", 500);
+                return CustomResponse.error(500, "Sign out failed");
             }
         });
     }

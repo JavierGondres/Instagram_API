@@ -2,9 +2,9 @@ import { Collection } from "mongodb";
 import bcrypt from "bcrypt";
 import { v4 as uuidv4 } from "uuid";
 import { UserSessions, Users } from "../../types/identidades.js";
-import { CustomError } from "../../utils/CustomErrors/index.js";
 import { generateJWT } from "../../middleware/generateJWT/index.js";
 import { SignInPayload, SignUpPayload } from "./types.js";
+import { CustomResponse } from "../../utils/Reponse/response.js";
 
 export class AuthModel {
    private userCollection: Collection<Users>;
@@ -24,7 +24,10 @@ export class AuthModel {
 
       const existingUser = await this.findUser({ email: payload.email });
       if (existingUser) {
-         throw new CustomError("User with this email already exists", 400);
+         return CustomResponse.error(
+            400,
+            "User with this email already exists"
+         );
       }
 
       const newUser: Users = {
@@ -37,17 +40,17 @@ export class AuthModel {
       try {
          await this.userCollection.insertOne(newUser);
          console.info("User created:", newUser.email);
-         return { error: false, message: "User created successfully" };
+         return CustomResponse.success("User created succesfully");
       } catch (error) {
          console.error("Error creating user:", error);
-         throw new CustomError("Something went wrong", 500);
+         return CustomResponse.error(500, "Something went wrong");
       }
    }
 
-   async signIn(payload: SignInPayload) {
+   async signIn(payload: SignInPayload): Promise<CustomResponse> {
       const existingUser = await this.findUser({ email: payload.email });
       if (!existingUser) {
-         throw new CustomError("User not found", 404);
+         return CustomResponse.error(404, "User not found");
       }
 
       const isValidPassword = await bcrypt.compare(
@@ -55,7 +58,7 @@ export class AuthModel {
          existingUser.password.toString()
       );
       if (!isValidPassword) {
-         throw new CustomError("Invalid credentials", 401);
+         return CustomResponse.error(401, "Invalid credentials");
       }
 
       const sessionId = uuidv4();
@@ -66,7 +69,7 @@ export class AuthModel {
       });
 
       if (!userAccessToken) {
-         throw new CustomError("Failed to generate access token", 500);
+         return CustomResponse.error(500, "failed to generate accesToken");
       }
 
       try {
@@ -79,14 +82,10 @@ export class AuthModel {
 
          await this.userSessionsCollection.insertOne(userSession);
          console.info(`User ${existingUser.email} logged in`);
-         return {
-            error: false,
-            message: "Login successful",
-            token: userAccessToken,
-         };
+         return CustomResponse.success("Login succesfull", userAccessToken);
       } catch (error) {
          console.error("Error creating user session:", error);
-         throw new CustomError("Something went wrong", 500);
+         return CustomResponse.error(500, "Something went wrong");
       }
    }
 
@@ -96,10 +95,10 @@ export class AuthModel {
             _id: sessionId,
          });
          console.info(`Session ${sessionId} signed out`);
-         return { error: false, message: "Sign out successful" };
+         return CustomResponse.success("Sign out successful");
       } catch (error) {
          console.error("Error during sign out:", error);
-         throw new CustomError("Sign out failed", 500);
+         return CustomResponse.error(500, "Sign out failed");
       }
    }
 
