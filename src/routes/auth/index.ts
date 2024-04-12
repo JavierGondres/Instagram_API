@@ -1,17 +1,13 @@
 import { Router } from "express";
 import { Database } from "../../types/database.js";
-import { AuthController } from "../../controllers/auth/index.js";
 import { validateData } from "../../middleware/validateData/index.js";
 import { signInSchema, signUpSchema } from "../../models/auth/schema.js";
-import { ValidateToken } from "../../middleware/verifyJWT/index.js";
 
 export const createAuthRouter = ({
-   authModel,
-   userSessionCollection,
-}: Pick<Database, "authModel" | "userSessionCollection">) => {
+   authController,
+   validateToken,
+}: Pick<Database, "authController" | "validateToken">) => {
    const authRouter = Router();
-   const authController = new AuthController(authModel);
-   const validateToken = new ValidateToken(userSessionCollection);
 
    authRouter.post(
       "/signIn",

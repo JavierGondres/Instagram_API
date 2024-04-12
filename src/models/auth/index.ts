@@ -24,10 +24,7 @@ export class AuthModel {
 
       const existingUser = await this.findUser({ email: payload.email });
       if (existingUser) {
-         return CustomResponse.error(
-            400,
-            "User with this email already exists"
-         );
+         return CustomResponse.error(400, "User already exists");
       }
 
       const newUser: Users = {
@@ -40,7 +37,7 @@ export class AuthModel {
       try {
          await this.userCollection.insertOne(newUser);
          console.info("User created:", newUser.email);
-         return CustomResponse.success("User created succesfully");
+         return CustomResponse.success("User created succesfully", newUser);
       } catch (error) {
          console.error("Error creating user:", error);
          return CustomResponse.error(500, "Something went wrong");
