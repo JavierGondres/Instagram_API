@@ -79,8 +79,6 @@ describe("Auth", () => {
                _id: userResponse._id,
             });
 
-            console.log(userResponse);
-
             expect(response.status).toBe(expected);
             expect(insertedUser).toEqual(userResponse);
          }
@@ -121,5 +119,16 @@ describe("Auth", () => {
          });
          expect(response.status).toBe(expected);
       });
+      
+      it("should throw an error because credentials are invalid", async () => {
+         const expected = 401;
+
+         const response = await request(app).post("/auth/signIn").send({
+            email: users[0].email,
+            password: 111111,
+         });
+         expect(response.status).toBe(expected);
+      });
+
    });
 });

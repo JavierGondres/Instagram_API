@@ -27,19 +27,45 @@ export class AuthModel {
         this.userCollection = userCollection;
         this.userSessionsCollection = userSessionsCollection;
     }
+    getHashPassword(password, saltOrRounds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const passwordHash = yield bcrypt.hash(password, saltOrRounds);
+                return passwordHash;
+            }
+            catch (error) {
+                console.error(error);
+                return null;
+            }
+        });
+    }
+    getIsValidPassword(unHashedPassword, hashedPassword) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const isValidPassword = yield bcrypt.compare(unHashedPassword, hashedPassword);
+                return isValidPassword;
+            }
+            catch (error) {
+                console.error(error);
+                return null;
+            }
+        });
+    }
     signUp(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { password, _id } = payload, rest = __rest(payload, ["password", "_id"]);
-            const passwordHash = yield bcrypt.hash(password, 8);
+            const passwordHash = yield this.getHashPassword(password, 8);
+            if (!passwordHash)
+                return CustomResponse.error(500, "Something went wrong hashing password");
             const existingUser = yield this.findUser({ email: payload.email });
             if (existingUser) {
-                return CustomResponse.error(400, "User with this email already exists");
+                return CustomResponse.error(400, "User already exists");
             }
             const newUser = Object.assign(Object.assign({}, rest), { password: passwordHash, role: rest.role || "User", _id });
             try {
                 yield this.userCollection.insertOne(newUser);
                 console.info("User created:", newUser.email);
-                return CustomResponse.success("User created succesfully");
+                return CustomResponse.success("User created succesfully", newUser);
             }
             catch (error) {
                 console.error("Error creating user:", error);
@@ -53,10 +79,12 @@ export class AuthModel {
             if (!existingUser) {
                 return CustomResponse.error(404, "User not found");
             }
-            const isValidPassword = yield bcrypt.compare(payload.password.toString(), existingUser.password.toString());
-            if (!isValidPassword) {
+            const isValidPassword = yield this.getIsValidPassword(payload.password, existingUser.password);
+            if (isValidPassword == false) {
                 return CustomResponse.error(401, "Invalid credentials");
             }
+            else if (isValidPassword == null)
+                return CustomResponse.error(500, "There was a problem comparing hashed passwords");
             const sessionId = uuidv4();
             const { userAccessToken } = yield generateJWT({
                 role: existingUser.role,

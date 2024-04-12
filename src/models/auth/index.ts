@@ -18,9 +18,41 @@ export class AuthModel {
       this.userSessionsCollection = userSessionsCollection;
    }
 
+   private async getHashPassword(password: string, saltOrRounds: number) {
+      try {
+         const passwordHash = await bcrypt.hash(password, saltOrRounds);
+         return passwordHash;
+      } catch (error) {
+         console.error(error);
+         return null;
+      }
+   }
+
+   private async getIsValidPassword(
+      unHashedPassword: string,
+      hashedPassword: string
+   ) {
+      try {
+         const isValidPassword = await bcrypt.compare(
+            unHashedPassword,
+            hashedPassword
+         );
+
+         return isValidPassword;
+      } catch (error) {
+         console.error(error);
+         return null;
+      }
+   }
+
    async signUp(payload: SignUpPayload) {
       const { password, _id, ...rest } = payload;
-      const passwordHash = await bcrypt.hash(password, 8);
+      const passwordHash = await this.getHashPassword(password, 8);
+      if (!passwordHash)
+         return CustomResponse.error(
+            500,
+            "Something went wrong hashing password"
+         );
 
       const existingUser = await this.findUser({ email: payload.email });
       if (existingUser) {
@@ -50,13 +82,18 @@ export class AuthModel {
          return CustomResponse.error(404, "User not found");
       }
 
-      const isValidPassword = await bcrypt.compare(
-         payload.password.toString(),
-         existingUser.password.toString()
+      const isValidPassword = await this.getIsValidPassword(
+         payload.password,
+         existingUser.password
       );
-      if (!isValidPassword) {
+
+      if (isValidPassword == false) {
          return CustomResponse.error(401, "Invalid credentials");
-      }
+      } else if (isValidPassword == null)
+         return CustomResponse.error(
+            500,
+            "There was a problem comparing hashed passwords"
+         );
 
       const sessionId = uuidv4();
       const { userAccessToken } = await generateJWT({

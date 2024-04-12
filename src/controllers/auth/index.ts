@@ -13,10 +13,14 @@ export class AuthController {
 
    signIn = async (req: Request, res: Response) => {
       const { email, password }: SignInPayload = req.body;
-      const client = req.headers["user-agent"]
+      const client = req.headers["user-agent"];
 
       try {
-         const result = await this.authModel.signIn({ email, password, client: client ?? "No client"});
+         const result = await this.authModel.signIn({
+            email,
+            password: password.toString(),
+            client: client ?? "No client",
+         });
          return res.status(result.status).json(result);
       } catch (e) {
          console.error(e);
@@ -40,7 +44,7 @@ export class AuthController {
             userName,
             email,
             fullName,
-            password,
+            password: password.toString(),
             profilePicture,
             role: role || Roles.USER,
          });

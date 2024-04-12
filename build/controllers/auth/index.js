@@ -15,7 +15,11 @@ export class AuthController {
             const { email, password } = req.body;
             const client = req.headers["user-agent"];
             try {
-                const result = yield this.authModel.signIn({ email, password, client: client !== null && client !== void 0 ? client : "No client" });
+                const result = yield this.authModel.signIn({
+                    email,
+                    password: password.toString(),
+                    client: client !== null && client !== void 0 ? client : "No client",
+                });
                 return res.status(result.status).json(result);
             }
             catch (e) {
@@ -32,7 +36,7 @@ export class AuthController {
                     userName,
                     email,
                     fullName,
-                    password,
+                    password: password.toString(),
                     profilePicture,
                     role: role || Roles.USER,
                 });

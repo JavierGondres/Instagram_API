@@ -1,7 +1,8 @@
 import express, { json } from "express";
 import { Database } from "./types/database.js";
 import { createAuthRouter } from "./routes/auth/index.js";
-import { AddressInfo } from "net";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const createApp = async ({
    authController,
@@ -18,8 +19,8 @@ export const createApp = async ({
          validateToken,
       })
    );
-   const server = app.listen(0, () => {
-      const port = (server.address() as AddressInfo).port;
+   const port = process.env.PORT ?? 1234;
+   const server = app.listen(port, () => {
       console.log(`Server listening on port ${port}`);
    });
 

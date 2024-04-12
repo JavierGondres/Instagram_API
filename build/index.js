@@ -9,14 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import express, { json } from "express";
 import { createAuthRouter } from "./routes/auth/index.js";
-export const createApp = (_a) => __awaiter(void 0, [_a], void 0, function* ({ authModel, userSessionCollection }) {
+import dotenv from "dotenv";
+dotenv.config();
+export const createApp = (_a) => __awaiter(void 0, [_a], void 0, function* ({ authController, validateToken, }) {
+    var _b;
     const app = express();
     app.use(json());
     app.disable("x-powered-by");
     app.use("/auth", createAuthRouter({
-        authModel: authModel,
-        userSessionCollection: userSessionCollection,
+        authController,
+        validateToken,
     }));
-    const port = process.env.PORT || 1234;
-    app.listen(port, () => console.log("Server listening on port", port));
+    const port = (_b = process.env.PORT) !== null && _b !== void 0 ? _b : 1234;
+    const server = app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    });
+    return server;
 });
