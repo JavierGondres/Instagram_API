@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import { v4 } from "uuid";
 import { Roles } from "../../types/enum.js";
-import { AuthModel } from "../../models/auth/index.js";
 import { SignInPayload, SignUpPayload } from "./types.js";
+import { UserService } from "../../services/users/user.service.js";
+import { CustomResponse } from "../../utils/Reponse/response.js";
 
 export class AuthController {
-   private authModel: AuthModel;
+   private userService: UserService;
 
-   constructor(authModel: AuthModel) {
-      this.authModel = authModel;
+   constructor(userService: UserService) {
+      this.userService = userService;
    }
 
    signIn = async (req: Request, res: Response) => {
@@ -16,15 +16,15 @@ export class AuthController {
       const client = req.headers["user-agent"];
 
       try {
-         const result = await this.authModel.signIn({
+         const result = await this.userService.signIn({
             email,
             password: password.toString(),
             client: client ?? "No client",
          });
-         return res.status(result.status).json(result);
-      } catch (e) {
-         console.error(e);
-         return res.status(501).json("Internal server error");
+         return CustomResponse.response(result.status, result, res);
+      } catch (error) {
+         console.error("Error during sign-in:", error);
+         return CustomResponse.handleErrorResponse(error, res);
       }
    };
 
@@ -37,10 +37,9 @@ export class AuthController {
          profilePicture,
          role,
       }: SignUpPayload = req.body;
+
       try {
-         const _id = v4();
-         const result = await this.authModel.signUp({
-            _id,
+         const result = await this.userService.signUp({
             userName,
             email,
             fullName,
@@ -48,10 +47,10 @@ export class AuthController {
             profilePicture,
             role: role || Roles.USER,
          });
-         return res.status(result.status).json(result);
-      } catch (e) {
-         console.error(e);
-         return res.status(501).json("Internal server error");
+         return CustomResponse.response(result.status, result, res);
+      } catch (error) {
+         console.error("Error during signUp:", error);
+         return CustomResponse.handleErrorResponse(error, res);
       }
    };
 
@@ -62,11 +61,11 @@ export class AuthController {
             return res.status(401).json("Missing credentials");
          }
 
-         const result = await this.authModel.signOut(sessionId);
-         return res.status(result.status).json(result);
-      } catch (e) {
-         console.error(e);
-         return res.status(501).json("Internal server error");
+         const result = await this.userService.signOut(sessionId);
+         return CustomResponse.response(result.status, result, res);
+      } catch (error) {
+         console.error("Error during signOut:", error);
+         return CustomResponse.handleErrorResponse(error, res);
       }
    };
 }

@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { Collection } from "mongodb";
 import request from "supertest";
-import { AuthModel } from "../../src/models/auth/index.js";
 import { DBCollections } from "../../src/types/enum.js";
 import { UserSessions, Users } from "../../src/types/identidades.js";
 import express, { json } from "express";
@@ -12,6 +11,8 @@ import { MongoDbTest } from "../dbConnection/MongoDbTest.js";
 import { createMultipleRandomUsers } from "../mocks/Users/index.js";
 import { AuthController } from "../../src/controllers/auth/index.js";
 import { ValidateToken } from "../../src/middleware/verifyJWT/index.js";
+// import { CustomResponse } from "../../src/utils/Reponse/response.js";
+import { UserService } from "../../src/services/users/user.service.js";
 
 dotenv.config();
 
@@ -27,12 +28,34 @@ const setupMongoMemoryServer = async () => {
    return { userCollection, userSessionCollection };
 };
 
+const users = createMultipleRandomUsers(5);
+// const token = "token";
+// jest.mock("../../src/models/auth/index.js", () => {
+//    return {
+//       UserModel: jest.fn().mockImplementation(() => ({
+//          signUp: jest
+//             .fn()
+//             .mockResolvedValue(
+//                CustomResponse.success("User created succesfully", users[0])
+//             ),
+//          signIn: jest
+//             .fn()
+//             .mockResolvedValue(
+//                CustomResponse.success("Login succesfull", token)
+//             ),
+//          signOut: jest
+//             .fn()
+//             .mockResolvedValue(CustomResponse.success("Sign out successful")),
+//          findUser: jest.fn().mockResolvedValue(users[0]),
+//       })),
+//    };
+// });
+
 describe("Auth", () => {
    let app: express.Application;
    let server: Server<typeof IncomingMessage, typeof ServerResponse>;
    let userCollection: Collection<Users>;
    let userSessionCollection: Collection<UserSessions>;
-   const users = createMultipleRandomUsers(5);
 
    beforeAll(async () => {
       app = express();
@@ -45,7 +68,7 @@ describe("Auth", () => {
       userSessionCollection = usc;
 
       const authController = new AuthController(
-         new AuthModel(userCollection, userSessionCollection)
+         new UserService(userCollection, userSessionCollection)
       );
 
       const validateToken = new ValidateToken(userSessionCollection);
@@ -74,11 +97,18 @@ describe("Auth", () => {
          const expected = 200;
          for (const user of users) {
             const response = await request(app).post("/auth/signUp").send(user);
-            const userResponse: Users = response.body.data;
+            // const userResponse = response.body as {
+            //    status: number;
+            //    message: string;
+            //    data: Users;
+            // };
+
+            const userResponse = response.body.data as Users;
             const insertedUser = await userCollection.findOne({
                _id: userResponse._id,
             });
 
+            console.log(userResponse);
             expect(response.status).toBe(expected);
             expect(insertedUser).toEqual(userResponse);
          }
@@ -119,7 +149,7 @@ describe("Auth", () => {
          });
          expect(response.status).toBe(expected);
       });
-      
+
       it("should throw an error because credentials are invalid", async () => {
          const expected = 401;
 
@@ -129,6 +159,5 @@ describe("Auth", () => {
          });
          expect(response.status).toBe(expected);
       });
-
    });
 });

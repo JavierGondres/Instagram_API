@@ -29,8 +29,8 @@ export class UserModel {
                 return passwordHash;
             }
             catch (error) {
-                console.error(error);
-                return null;
+                console.error("Error, couldnt hash password: ", error);
+                CustomResponse.error(500, "couldnt hash password");
             }
         });
     }
@@ -41,8 +41,8 @@ export class UserModel {
                 return isValidPassword;
             }
             catch (error) {
-                console.error(error);
-                return null;
+                console.error("Error, couldnt validate password: ", error);
+                CustomResponse.error(500, "Error, couldnt validate password: ");
             }
         });
     }
@@ -52,14 +52,12 @@ export class UserModel {
                 const { password } = payload, rest = __rest(payload, ["password"]);
                 const passwordHash = yield this.getHashPassword(password, 8);
                 const _id = uuidv4();
-                if (!passwordHash)
-                    return CustomResponse.error(500, "couldnt hash password");
                 const newUser = Object.assign(Object.assign({}, rest), { password: passwordHash, role: rest.role || "User", _id });
                 return newUser;
             }
             catch (error) {
                 console.error("Error creating user:", error);
-                return CustomResponse.error(500, "couldnt create user");
+                CustomResponse.error(500, "couldnt create user");
             }
         });
     }

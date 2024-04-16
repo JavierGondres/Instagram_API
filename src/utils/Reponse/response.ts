@@ -15,18 +15,25 @@ export class CustomResponse {
       return new CustomResponse(200, message, data);
    }
 
-   static error(status: number, message: string): CustomResponse {
-      return new CustomResponse(status, message);
+   static error(status: number, message: string): never {
+      throw new CustomResponse(status, message);
    }
 
    static async response(
       status: number,
-      message: string,
+      result: any,
       res: Response
    ): Promise<Response> {
       return res.status(status).json({
          status,
-         message,
+         result,
       });
+   }
+
+   static handleErrorResponse(error: any, res: Response) {
+      const errorMessage = error.message || "Internal server error";
+      const errorStatus = error.status || 500;
+      const result = { error: errorMessage };
+      return this.response(errorStatus, result, res);
    }
 }

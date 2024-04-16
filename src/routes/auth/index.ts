@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Database } from "../../types/database.js";
 import { validateData } from "../../middleware/validateData/index.js";
-import { signInSchema, signUpSchema } from "../../models/auth/schema.js";
+import { signInSchema, signUpSchema } from "../../models/users/schema.js";
 
 export const createAuthRouter = ({
    authController,

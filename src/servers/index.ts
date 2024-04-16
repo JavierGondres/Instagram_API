@@ -3,10 +3,10 @@ import dotenv from "dotenv";
 import { createApp } from "../index.js";
 import { MongoSingleton } from "../singleton/MongoSingleton.js";
 import { DBCollections } from "../types/enum.js";
-import { AuthModel } from "../models/auth/index.js";
 import { UserSessions, Users } from "../types/identidades.js";
 import { AuthController } from "../controllers/auth/index.js";
 import { ValidateToken } from "../middleware/verifyJWT/index.js";
+import { UserService } from "../services/users/user.service.js";
 dotenv.config();
 
 //AUTH AND USER//
@@ -19,7 +19,7 @@ const userSessionCollection = MongoSingleton.getClient()
    .collection(DBCollections.USER_SESSIONS) as Collection<UserSessions>;
 
 const authController = new AuthController(
-   new AuthModel(userCollection, userSessionCollection)
+   new UserService(userCollection, userSessionCollection)
 );
 
 const validateToken = new ValidateToken(userSessionCollection);

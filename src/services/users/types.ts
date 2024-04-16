@@ -1,6 +1,6 @@
 import { Users } from "../../types/identidades.js";
 
-export interface SignUpPayload extends Omit<Users, "password"> {
+export interface SignUpPayload extends Omit<Users, "password"| "_id"> {
    password: string;
 }
 

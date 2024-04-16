@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Roles } from "../../types/enum.js";
-import { CustomResponse } from "../../utils/Reponse/response.js";
 export class AuthController {
     constructor(userService) {
         this.signIn = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -20,11 +19,11 @@ export class AuthController {
                     password: password.toString(),
                     client: client !== null && client !== void 0 ? client : "No client",
                 });
-                return CustomResponse.response(result.status, result, res);
+                return res.status(result.status).json(result);
             }
-            catch (error) {
-                console.error("Error during sign-in:", error);
-                return CustomResponse.handleErrorResponse(error, res);
+            catch (e) {
+                console.error(e);
+                return res.status(501).json("Internal server error");
             }
         });
         this.signUp = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -38,11 +37,11 @@ export class AuthController {
                     profilePicture,
                     role: role || Roles.USER,
                 });
-                return CustomResponse.response(result.status, result, res);
+                return res.status(result.status).json(result);
             }
-            catch (error) {
-                console.error("Error during signUp:", error);
-                return CustomResponse.handleErrorResponse(error, res);
+            catch (e) {
+                console.error(e);
+                return res.status(501).json("Internal server error");
             }
         });
         this.signOut = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -52,11 +51,11 @@ export class AuthController {
                     return res.status(401).json("Missing credentials");
                 }
                 const result = yield this.userService.signOut(sessionId);
-                return CustomResponse.response(result.status, result, res);
+                return res.status(result.status).json(result);
             }
-            catch (error) {
-                console.error("Error during signOut:", error);
-                return CustomResponse.handleErrorResponse(error, res);
+            catch (e) {
+                console.error(e);
+                return res.status(501).json("Internal server error");
             }
         });
         this.userService = userService;

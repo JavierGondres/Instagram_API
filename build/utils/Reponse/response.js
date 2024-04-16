@@ -17,14 +17,20 @@ export class CustomResponse {
         return new CustomResponse(200, message, data);
     }
     static error(status, message) {
-        return new CustomResponse(status, message);
+        throw new CustomResponse(status, message);
     }
-    static response(status, message, res) {
+    static response(status, result, res) {
         return __awaiter(this, void 0, void 0, function* () {
             return res.status(status).json({
                 status,
-                message,
+                result,
             });
         });
+    }
+    static handleErrorResponse(error, res) {
+        const errorMessage = error.message || "Internal server error";
+        const errorStatus = error.status || 500;
+        const result = { error: errorMessage };
+        return this.response(errorStatus, result, res);
     }
 }
