@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Database } from "../../types/database.js";
 import { validateData } from "../../middleware/validateData/index.js";
 import { signInSchema, signUpSchema } from "../../models/users/schema.js";
+import { API_VERSION } from "../../utils/ApiVersions/apiVersion.js";
 
 export const createAuthRouter = ({
    authController,
@@ -10,17 +11,17 @@ export const createAuthRouter = ({
    const authRouter = Router();
 
    authRouter.post(
-      "/signIn",
+      `${API_VERSION}/signIn`,
       [validateData(signInSchema)],
       authController.signIn
    );
    authRouter.post(
-      "/signUp",
+      `${API_VERSION}/signUp`,
       validateData(signUpSchema),
       authController.signUp
    );
    authRouter.post(
-      "/signOut",
+      `${API_VERSION}/signOut`,
       validateToken.validateToken,
       authController.signOut
    );
