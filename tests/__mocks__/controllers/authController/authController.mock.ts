@@ -54,7 +54,7 @@ export const authControllerMock = (userService: userServiceMockProps) => ({
 
    signOut: jest.fn(async (req: Request, res: Response) => {
       try {
-         const sessionId = req.decodedSessionId;
+         const sessionId = (req as any).decodedSessionId;
          if (!sessionId) {
             return res.status(401).json("Missing credentials");
          }

@@ -5,13 +5,14 @@ import { createAuthRouter } from "../../src/routes/auth/index.js";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { MongoDbTest } from "../dbConnection/MongoDbTest.js";
 import { ValidateToken } from "../../src/middleware/verifyJWT/index.js";
-import { fakeUsers } from "../mocks/identitades/Users/index.js";
-import { userServiceMock } from "../mocks/services/UserService/userSevice.mock.js";
 import { Collection } from "mongodb";
 import { UserSessions, Users } from "../../src/types/identidades.js";
-import { userRepositoriesMock } from "../mocks/repositories/UserRepositories/userRepositories.mock.js";
-import { authControllerMock } from "../mocks/controllers/authController/authController.mock.js";
-import { userRepositoriesMockProps } from "../mocks/repositories/UserRepositories/types.js";
+import { userRepositoriesMockProps } from "../__mocks__/repositories/UserRepositories/types.js";
+import { userRepositoriesMock } from "../__mocks__/repositories/UserRepositories/userRepositories.mock.js";
+import { authControllerMock } from "../__mocks__/controllers/authController/authController.mock.js";
+import { userServiceMock } from "../__mocks__/services/UserService/userSevice.mock.js";
+import { fakeUsers } from "../__mocks__/identitades/Users/index.js";
+
 
 dotenv.config();
 
