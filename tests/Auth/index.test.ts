@@ -4,17 +4,14 @@ import express, { json } from "express";
 import { createAuthRouter } from "../../src/routes/auth/index.js";
 import { IncomingMessage, Server, ServerResponse } from "http";
 import { MongoDbTest } from "../dbConnection/MongoDbTest.js";
-import { AuthController } from "../../src/controllers/auth/index.js";
 import { ValidateToken } from "../../src/middleware/verifyJWT/index.js";
-import { UserService } from "../../src/services/users/user.service.js";
 import { fakeUsers } from "../mocks/identitades/Users/index.js";
-import { userServiceMock } from "../mocks/UserService/userSevice.mock.js";
+import { userServiceMock } from "../mocks/services/UserService/userSevice.mock.js";
 import { Collection } from "mongodb";
 import { UserSessions, Users } from "../../src/types/identidades.js";
-import {
-   userRepositoriesMock,
-   userRepositoriesMockProps,
-} from "../mocks/repositories/UserRepositories/userRepositories.mock.js";
+import { userRepositoriesMock } from "../mocks/repositories/UserRepositories/userRepositories.mock.js";
+import { authControllerMock } from "../mocks/controllers/authController/authController.mock.js";
+import { userRepositoriesMockProps } from "../mocks/repositories/UserRepositories/types.js";
 
 dotenv.config();
 
@@ -40,11 +37,17 @@ describe("Auth", () => {
       );
 
       userRepositoriesMockInstance = userRepositoriesMock(userCollection);
-      const authController = new AuthController(
-         userServiceMock(userRepositoriesMockInstance) as unknown as UserService
+      const authController = authControllerMock(
+         userServiceMock(userRepositoriesMockInstance)
       );
 
-      app.use("/auth", createAuthRouter({ authController, validateToken }));
+      app.use(
+         "/auth",
+         createAuthRouter({
+            authController: authController as any,
+            validateToken,
+         })
+      );
       const port = 8080;
       server = app.listen(port, () => {
          console.log(`Server listening on port ${port}`);
@@ -54,8 +57,8 @@ describe("Auth", () => {
    beforeEach(async () => {
       await mongoDbTestInstance.clear();
       jest.clearAllMocks();
-      userRepositoriesMockInstance.insert.mockReset()
-      userRepositoriesMockInstance.findUser.mockReset()
+      userRepositoriesMockInstance.insert.mockReset();
+      userRepositoriesMockInstance.findUser.mockReset();
    });
 
    afterAll(async () => {

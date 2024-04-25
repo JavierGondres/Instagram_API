@@ -1,9 +1,14 @@
-import { SignUpPayload } from "../../../src/controllers/auth/types";
-import { CustomResponse } from "../../../src/utils/Reponse/response";
-import { userModelMock } from "../models/UserModel/userModel.mock";
-import { userRepositoriesMockProps } from "../repositories/UserRepositories/userRepositories.mock";
+import {
+   SignInPayload,
+   SignUpPayload,
+} from "../../../../src/services/users/types";
+import { CustomResponse } from "../../../../src/utils/Reponse/response";
+import { userModelMock } from "../../models/UserModel/userModel.mock";
+import { userRepositoriesMockProps } from "../../repositories/UserRepositories/types";
 
-export const userServiceMock = (userRepositoriesMockInstance: userRepositoriesMockProps) => ({
+export const userServiceMock = (
+   userRepositoriesMockInstance: userRepositoriesMockProps
+) => ({
    signUp: jest.fn(async (payload: SignUpPayload) => {
       try {
          const existUser = await userRepositoriesMockInstance.findUser({
@@ -23,13 +28,15 @@ export const userServiceMock = (userRepositoriesMockInstance: userRepositoriesMo
       }
    }),
 
-   signIn: jest.fn(async () => {
+   signIn: jest.fn(async (payload: SignInPayload) => {
+      console.log(payload);
       // Aquí puedes definir el comportamiento esperado del método signIn durante las pruebas
       // Por ejemplo, puedes devolver una respuesta ficticia
       return CustomResponse.success("Login succesfull", "mocked-token");
    }),
 
-   signOut: jest.fn(async () => {
+   signOut: jest.fn(async (sessionId: string) => {
+      console.log(sessionId);
       // Aquí puedes definir el comportamiento esperado del método signOut durante las pruebas
       // Por ejemplo, puedes devolver una respuesta ficticia
       return CustomResponse.success("Sign out successful");

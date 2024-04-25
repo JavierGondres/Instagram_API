@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { UserSessions } from "../../../../../src/types/identidades";
+import { UserSessions } from "../../../../src/types/identidades";
 
 export class FakeUserSessions {
    static createOne(userId?: string, token?: string): UserSessions {
