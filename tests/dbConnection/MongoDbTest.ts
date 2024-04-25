@@ -1,41 +1,58 @@
-import { MongoClient, MongoClientOptions } from "mongodb";
+import { Collection, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import dotenv from "dotenv";
+import { DBCollections } from "../../src/types/enum";
+import { UserSessions, Users } from "../../src/types/identidades";
+dotenv.config();
 
 export class MongoDbTest {
+   private static instance: MongoDbTest;
    private static mongoServer?: MongoMemoryServer;
    private static mongoClient?: MongoClient;
+   public userCollection?: Collection<Users>;
+   public userSessionCollection?: Collection<UserSessions>;
 
-   /**
-    * Inicializa el servidor de MongoDB en memoria y establece una conexión con él.
-    * @param options Opciones adicionales para la conexión de MongoClient.
-    */
-   static async start(options?: MongoClientOptions): Promise<MongoClient> {
-      // Iniciar el servidor de MongoDB en memoria
-      this.mongoServer = await MongoMemoryServer.create();
-
-      // Obtener la URI de conexión al servidor en memoria
-      const uri = this.mongoServer.getUri();
-
-      // Crear un cliente MongoClient y conectar al servidor en memoria
-      this.mongoClient = new MongoClient(uri, options);
-
-      // Conectar al servidor en memoria
-      await this.mongoClient.connect();
-
-      return this.mongoClient;
+   static async getInstance(): Promise<MongoDbTest> {
+      if (!MongoDbTest.instance) {
+         MongoDbTest.instance = new MongoDbTest();
+         await MongoDbTest.instance.initialize();
+      }
+      return MongoDbTest.instance;
    }
 
-   static async clear(): Promise<void> {
+   private async initialize(): Promise<void> {
+      // Iniciar el servidor de MongoDB en memoria
+      const newPort = 8080;
+      MongoDbTest.mongoServer = await MongoMemoryServer.create({
+         instance: { port: newPort },
+      });
+
+      // Obtener la URI de conexión al servidor en memoria
+      const uri = MongoDbTest.mongoServer.getUri();
+
+      // Crear un cliente MongoClient y conectar al servidor en memoria
+      MongoDbTest.mongoClient = new MongoClient(uri);
+
+      // Conectar al servidor en memoria
+      await MongoDbTest.mongoClient.connect();
+      // Inicializar las colecciones
+      this.userCollection = MongoDbTest.mongoClient
+         .db()
+         .collection(DBCollections.USERS) as Collection<Users>;
+      this.userSessionCollection = MongoDbTest.mongoClient
+         .db()
+         .collection(DBCollections.USER_SESSIONS) as Collection<UserSessions>;
+   }
+
+   async clear(): Promise<void> {
       // Verificar si hay un cliente MongoClient conectado
-      if (!this.mongoClient) {
-         throw new Error(
-            "MongoClient is not initialized. Please call start() before clearing collections."
-         );
+      if (!MongoDbTest.mongoClient) {
+         throw new Error("MongoClient is not initialized.");
       }
 
       try {
          // Obtener la lista de colecciones
-         const collections = await this.mongoClient.db().collections();
+         const collections = await MongoDbTest.mongoClient.db().collections();
 
          // Iterar sobre cada colección y eliminar todos los documentos
          for (const collection of collections) {
@@ -49,34 +66,16 @@ export class MongoDbTest {
       }
    }
 
-   /**
-    * Detiene el servidor de MongoDB en memoria y cierra la conexión.
-    */
-   static async stop(): Promise<void> {
+   async stop(): Promise<void> {
       // Cerrar la conexión con el cliente MongoClient
-      if (this.mongoClient) {
-         await this.mongoClient.db().dropDatabase();
-         await this.mongoClient.close();
+      if (MongoDbTest.mongoClient) {
+         await MongoDbTest.mongoClient.db().dropDatabase();
+         await MongoDbTest.mongoClient.close();
       }
 
       // Detener el servidor de MongoDB en memoria
-      if (this.mongoServer) {
-         await this.mongoServer.stop();
+      if (MongoDbTest.mongoServer) {
+         await MongoDbTest.mongoServer.stop();
       }
-   }
-
-   /**
-    * Obtiene una referencia a la base de datos de prueba.
-    * @param dbName Nombre de la base de datos.
-    * @returns Referencia a la base de datos.
-    */
-   static getDb(dbName: string): any {
-      if (!this.mongoClient) {
-         throw new Error(
-            "MongoClient is not initialized. Please call start() before accessing the database."
-         );
-      }
-
-      return this.mongoClient.db(dbName);
    }
 }

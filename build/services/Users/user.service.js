@@ -22,13 +22,13 @@ export class UserService {
     signUp(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const { password, email, fullName, profilePicture, role, userName } = payload;
-            const existingUser = yield this.userRepositories.findUser({
-                email: payload.email,
-            });
-            if (existingUser) {
-                throw CustomResponse.error(400, "User already exists");
-            }
             try {
+                const existingUser = yield this.userRepositories.findUser({
+                    email: payload.email,
+                });
+                if (existingUser) {
+                    CustomResponse.error(400, "User already exists");
+                }
                 const newUser = yield this.userModel.create({
                     password,
                     email,
@@ -43,25 +43,28 @@ export class UserService {
             }
             catch (error) {
                 console.error("Error creating user:", error);
-                throw CustomResponse.error(500, "Something went wrong");
+                if (error instanceof CustomResponse)
+                    throw error;
+                else
+                    CustomResponse.error(500, "Something went wrong");
             }
         });
     }
     signIn(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const existingUser = yield this.userRepositories.findUser({
-                email: payload.email,
-            });
-            if (!existingUser) {
-                CustomResponse.error(404, "User not found");
-            }
-            const isValidPassword = yield this.userModel.getIsValidPassword(payload.password, existingUser.password);
-            if (isValidPassword == false) {
-                CustomResponse.error(401, "Invalid credentials");
-            }
-            else if (isValidPassword == null)
-                throw CustomResponse.error(500, "There was a problem comparing hashed passwords");
             try {
+                const existingUser = yield this.userRepositories.findUser({
+                    email: payload.email,
+                });
+                if (!existingUser) {
+                    CustomResponse.error(404, "User not found");
+                }
+                const isValidPassword = yield this.userModel.getIsValidPassword(payload.password, existingUser.password);
+                if (isValidPassword == false) {
+                    CustomResponse.error(401, "Invalid credentials");
+                }
+                else if (isValidPassword == null)
+                    throw CustomResponse.error(500, "There was a problem comparing hashed passwords");
                 const newUserSession = yield this.userSessionModel.create({
                     client: payload.client,
                     role: existingUser.role,
@@ -75,14 +78,13 @@ export class UserService {
             }
             catch (error) {
                 console.error("Error creating user session:", error);
-                CustomResponse.error(500, "Something went wrong");
+                throw error;
             }
         });
     }
     signOut(sessionId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // Invalidar la sesión marcando isValid como false
                 const updated = yield this.userSessionRepositories.updateOne(sessionId);
                 if (!updated)
                     throw CustomResponse.error(500, "Session not found");
@@ -91,7 +93,7 @@ export class UserService {
             }
             catch (error) {
                 console.error("Error during sign out:", error);
-                CustomResponse.error(500, "Sign out failed");
+                throw error;
             }
         });
     }

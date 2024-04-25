@@ -1,6 +1,5 @@
 import { Collection } from "mongodb";
 import { UserSessions, Users } from "../../types/identidades.js";
-
 import { CustomResponse } from "../../utils/Reponse/response.js";
 import { UserModel } from "../../models/users/index.js";
 import { UserRepositories } from "../../repositories/users/users.repositories.js";
@@ -28,14 +27,13 @@ export class UserService {
       const { password, email, fullName, profilePicture, role, userName } =
          payload;
 
-      const existingUser = await this.userRepositories.findUser({
-         email: payload.email,
-      });
-      if (existingUser) {
-         throw CustomResponse.error(400, "User already exists");
-      }
-
       try {
+         const existingUser = await this.userRepositories.findUser({
+            email: payload.email,
+         });
+         if (existingUser) {
+            CustomResponse.error(400, "User already exists");
+         }
          const newUser = await this.userModel.create({
             password,
             email,
@@ -53,32 +51,33 @@ export class UserService {
          return CustomResponse.success("User created succesfully", newUser);
       } catch (error) {
          console.error("Error creating user:", error);
-         throw CustomResponse.error(500, "Something went wrong");
+         if (error instanceof CustomResponse) throw error;
+         else CustomResponse.error(500, "Something went wrong");
       }
    }
 
    async signIn(payload: SignInPayload): Promise<CustomResponse> {
-      const existingUser = await this.userRepositories.findUser({
-         email: payload.email,
-      });
-      if (!existingUser) {
-         CustomResponse.error(404, "User not found");
-      }
+      try {
+         const existingUser = await this.userRepositories.findUser({
+            email: payload.email,
+         });
 
-      const isValidPassword = await this.userModel.getIsValidPassword(
-         payload.password,
-         existingUser.password
-      );
+         if (!existingUser) {
+            CustomResponse.error(404, "User not found");
+         }
 
-      if (isValidPassword == false) {
-         CustomResponse.error(401, "Invalid credentials");
-      } else if (isValidPassword == null)
-         throw CustomResponse.error(
-            500,
-            "There was a problem comparing hashed passwords"
+         const isValidPassword = await this.userModel.getIsValidPassword(
+            payload.password,
+            existingUser.password
          );
 
-      try {
+         if (isValidPassword == false) {
+            CustomResponse.error(401, "Invalid credentials");
+         } else if (isValidPassword == null)
+            throw CustomResponse.error(
+               500,
+               "There was a problem comparing hashed passwords"
+            );
          const newUserSession = await this.userSessionModel.create({
             client: payload.client,
             role: existingUser.role,
@@ -97,13 +96,12 @@ export class UserService {
          );
       } catch (error) {
          console.error("Error creating user session:", error);
-         CustomResponse.error(500, "Something went wrong");
+         throw error;
       }
    }
 
    async signOut(sessionId: string) {
       try {
-         // Invalidar la sesión marcando isValid como false
          const updated = await this.userSessionRepositories.updateOne(
             sessionId
          );
@@ -114,7 +112,7 @@ export class UserService {
          return CustomResponse.success("Sign out successful");
       } catch (error) {
          console.error("Error during sign out:", error);
-         CustomResponse.error(500, "Sign out failed");
+         throw error;
       }
    }
 }

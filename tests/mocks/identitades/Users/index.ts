@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { Users } from "../../../src/types/identidades.js";
-import { Roles } from "../../../src/types/enum.js";
+import { Users } from "../../../../src/types/identidades.js";
+import { Roles } from "../../../../src/types/enum.js";
 
-export function createRandomUser(): Omit<Users, "_id"> {
+export function createRandomUser(): Users {
    return {
+      _id: faker.string.uuid(),
       userName: faker.internet.displayName(),
       email: faker.internet.email(),
       profilePicture: faker.image.avatar(),
@@ -20,3 +21,5 @@ export const createMultipleRandomUsers = (cantidad: number) => {
 
    return users;
 };
+
+export const fakeUsers = createMultipleRandomUsers(5);

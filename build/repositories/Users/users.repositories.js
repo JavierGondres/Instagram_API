@@ -7,7 +7,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { CustomResponse } from "../../utils/Reponse/response.js";
 export class UserRepositories {
     constructor(userCollection) {
         this.userCollection = userCollection;
@@ -15,17 +14,12 @@ export class UserRepositories {
     insert(newUser) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const existingUser = yield this.findUser({ email: newUser.email });
-                if (existingUser) {
-                    CustomResponse.error(400, "User already exists");
-                }
                 yield this.userCollection.insertOne(newUser);
-                console.info("User created:", newUser.email);
                 return newUser;
             }
             catch (error) {
                 console.error("Error creating user:", error);
-                CustomResponse.error(500, "Something went wrong");
+                throw error;
             }
         });
     }
@@ -37,7 +31,7 @@ export class UserRepositories {
             }
             catch (error) {
                 console.error("Error in find user:", error);
-                CustomResponse.error(500, "Failed to find user");
+                throw error;
             }
         });
     }

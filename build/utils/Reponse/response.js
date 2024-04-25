@@ -21,10 +21,7 @@ export class CustomResponse {
     }
     static response(status, result, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            return res.status(status).json({
-                status,
-                result,
-            });
+            return res.status(status).json(result);
         });
     }
     static handleErrorResponse(error, res) {

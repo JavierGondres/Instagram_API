@@ -24,10 +24,7 @@ export class CustomResponse {
       result: any,
       res: Response
    ): Promise<Response> {
-      return res.status(status).json({
-         status,
-         result,
-      });
+      return res.status(status).json(result);
    }
 
    static handleErrorResponse(error: any, res: Response) {
