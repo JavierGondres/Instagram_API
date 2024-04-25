@@ -12,7 +12,7 @@ import { userRepositoriesMock } from "../__mocks__/repositories/UserRepositories
 import { authControllerMock } from "../__mocks__/controllers/authController/authController.mock.js";
 import { userServiceMock } from "../__mocks__/services/UserService/userSevice.mock.js";
 import { fakeUsers } from "../__mocks__/identitades/Users/index.js";
-
+import { API_VERSION } from "../../src/utils/ApiVersions/apiVersion.js";
 
 dotenv.config();
 
@@ -68,10 +68,16 @@ describe("Auth", () => {
    });
 
    describe("Sign up", () => {
-      it("should sign up a new user", async () => {
+      it("When user try to signUp, then the user signUp succesfully", async () => {
+         //Arrange
          const user = fakeUsers[0];
-         const response = await request(app).post("/auth/v1/signUp").send(user);
 
+         //Act
+         const response = await request(app)
+            .post(`/auth/${API_VERSION}/signUp`)
+            .send(user);
+
+         //Assert
          expect(response.body).toEqual({
             status: 200,
             message: "User created succesfully",
@@ -79,45 +85,59 @@ describe("Auth", () => {
          });
       });
 
-      it("should warn user exist", async () => {
+      it("When user tries to signUp twice, then the response would be an error", async () => {
+         //Arrange
          const user = fakeUsers[0];
+         const responseForCreatUser = await request(app)
+            .post(`/auth/${API_VERSION}/signUp`)
+            .send(user);
 
-         const response = await request(app).post("/auth/v1/signUp").send(user);
+         //Act
+         userRepositoriesMockInstance.findUser.mockResolvedValue({ ...user });
+         const responseForCreatTheSameUser = await request(app)
+            .post(`/auth/${API_VERSION}/signUp`)
+            .send(user);
 
-         expect(response.body).toEqual({
+         //Assert
+         expect(responseForCreatUser.body).toEqual({
             status: 200,
             message: "User created succesfully",
             data: user,
          });
-
-         userRepositoriesMockInstance.findUser.mockResolvedValue({ ...user });
-
-         const response2 = await request(app)
-            .post("/auth/v1/signUp")
-            .send(user);
-
-         expect(response2.body).toEqual({
+         expect(responseForCreatTheSameUser.body).toEqual({
             error: "User already exists",
          });
       });
 
-      it("should fail because method findUser failed from userRepositoriesMock", async () => {
+      it("When method findUser fail, then throws an exception", async () => {
+         //Arrange
+         const user = fakeUsers[0];
+
+         //Act
          userRepositoriesMockInstance.findUser.mockRejectedValue(
             new Error("Failed to find user")
          );
-         const user = fakeUsers[0];
-         const response = await request(app).post("/auth/v1/signUp").send(user);
+         const response = await request(app)
+            .post(`/auth/${API_VERSION}/signUp`)
+            .send(user);
 
+         //Assert
          expect(response.body).toEqual({ error: "Failed to find user" });
       });
 
-      it("should fail because method insert failed from userRepositoriesMock", async () => {
+      it("When method insert fail, then throws an exception", async () => {
+         //Arrange
+         const user = fakeUsers[0];
+
+         //Act
          userRepositoriesMockInstance.insert.mockRejectedValue(
             new Error("Failed to insert user")
          );
-         const user = fakeUsers[0];
-         const response = await request(app).post("/auth/v1/signUp").send(user);
+         const response = await request(app)
+            .post(`/auth/${API_VERSION}/signUp`)
+            .send(user);
 
+         //Assert
          expect(response.body).toEqual({ error: "Failed to insert user" });
       });
    });
